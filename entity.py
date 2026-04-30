@@ -5,22 +5,14 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.const import (
-    ATTR_NAME,
-    STATE_ON,
-    STATE_OFF,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_ON, UnitOfTemperature
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DOMAIN, CONF_NAME, CONF_DEVICE_TYPE
+from .const import DOMAIN, CONF_NAME
 from .homekit_type import (
     CHAR_CURRENT_TEMPERATURE,
-    CHAR_TARGET_TEMPERATURE,
     CHAR_HEATING_COOLING_CURRENT,
 )
 

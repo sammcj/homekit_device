@@ -5,7 +5,6 @@ from homeassistant.const import UnitOfTemperature
 # HomeKit Categories (from HAP-python)
 CATEGORY_KETTLE = 27
 CATEGORY_FAN = 3
-CATEGORY_LIGHTBULB = 5
 
 # HomeKit Characteristic UUIDs (from HAP-python)
 CHAR_ON = "00000025-0000-1000-8000-0026BB765291"
