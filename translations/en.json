@@ -41,7 +41,12 @@
                     "light_switch": "Light Control",
                     "alarm_state": "Alarm State Control",
                     "sensors": "Security Sensors",
-                    "siren": "Siren Control"
+                    "siren": "Siren Control",
+                    "laser_light": "Laser Light",
+                    "background_light": "Background/Nebula Light",
+                    "rotation_fan": "Rotation Fan",
+                    "child_lock": "Child Lock Switch",
+                    "display_switch": "Display On/Off Switch"
                 }
             }
         },
@@ -66,7 +71,8 @@
                 "humidifier": "Smart Humidifier",
                 "air_purifier": "Air Purifier",
                 "garage_door": "Garage Door",
-                "security_system": "Security System"
+                "security_system": "Security System",
+                "star_projector": "Star Projector"
             }
         }
     },
@@ -78,7 +84,8 @@
         "humidifier": "Combines humidity sensing and control into a smart humidifier",
         "air_purifier": "Creates an air purifier with air quality monitoring",
         "garage_door": "Combines door controls and sensors into a garage door opener",
-        "security_system": "Creates a security system from multiple sensors and controls"
+        "security_system": "Creates a security system from multiple sensors and controls",
+        "star_projector": "Combines a master switch, rotation fan and laser/background lights into a single star projector device"
     },
     "entity_descriptions": {
         "power_switch": "Main power control for the device",
@@ -103,12 +110,17 @@
         "filter_life": "Monitors the air filter's remaining life",
         "pm25": "Shows the PM2.5 particulate matter level",
         "voc": "Shows the Volatile Organic Compounds level",
+        "child_lock": "Switch that locks/unlocks the device's physical controls",
+        "display_switch": "Switch that turns the device's display on or off",
         "door_position": "Controls and monitors the door position",
         "obstruction": "Detects obstructions in the door's path",
         "motion": "Detects motion near the door",
         "light_switch": "Controls the associated light",
         "alarm_state": "Controls the security system's state",
         "sensors": "Security sensors to monitor",
-        "siren": "Controls the security system's siren"
+        "siren": "Controls the security system's siren",
+        "laser_light": "Star/laser projection light with brightness control",
+        "background_light": "Nebula/background light with brightness and colour control",
+        "rotation_fan": "Fan entity that controls rotation speed of the projection"
     }
 }

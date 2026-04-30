@@ -14,6 +14,8 @@ from .const import (
     CONF_OSCILLATION,
     CONF_SIREN,
     CONF_KEEP_WARM,
+    CONF_CHILD_LOCK,
+    CONF_DISPLAY_SWITCH,
 )
 from .entity import HomeKitDeviceSwitch
 
@@ -59,6 +61,26 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     f"{base_name} Siren",
                     siren,
+                )
+            )
+
+    elif device_type == "air_purifier":
+        if child_lock := config_entry.data.get(CONF_CHILD_LOCK):
+            entities.append(
+                HomeKitDeviceSwitch(
+                    hass,
+                    config_entry.entry_id,
+                    f"{base_name} Child Lock",
+                    child_lock,
+                )
+            )
+        if display_switch := config_entry.data.get(CONF_DISPLAY_SWITCH):
+            entities.append(
+                HomeKitDeviceSwitch(
+                    hass,
+                    config_entry.entry_id,
+                    f"{base_name} Display",
+                    display_switch,
                 )
             )
 
