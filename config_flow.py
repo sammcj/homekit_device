@@ -41,6 +41,11 @@ from .const import (
     CONF_ALARM_STATE,
     CONF_SENSORS,
     CONF_SIREN,
+    CONF_LASER_LIGHT,
+    CONF_BACKGROUND_LIGHT,
+    CONF_ROTATION_FAN,
+    CONF_CHILD_LOCK,
+    CONF_DISPLAY_SWITCH,
     DEVICE_TYPES,
     DEFAULT_NAME,
 )
@@ -191,6 +196,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_VOC): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
+                vol.Optional(CONF_CHILD_LOCK): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="switch")
+                ),
+                vol.Optional(CONF_DISPLAY_SWITCH): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="switch")
+                ),
             },
             "garage_door": {
                 vol.Required(CONF_DOOR_POSITION): selector.EntitySelector(
@@ -218,6 +229,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(CONF_SIREN): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="switch")
+                ),
+            },
+            "star_projector": {
+                vol.Optional(CONF_LASER_LIGHT): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="light")
+                ),
+                vol.Optional(CONF_BACKGROUND_LIGHT): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="light")
+                ),
+                vol.Optional(CONF_ROTATION_FAN): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="fan")
                 ),
             },
         }

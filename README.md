@@ -134,6 +134,8 @@ Creates an air purifier with air quality monitoring.
   - Filter Life Sensor
   - PM2.5 Sensor
   - VOC Sensor
+  - Child Lock Switch
+  - Display On/Off Switch
   - Status Sensor
 
 ### Garage Door
@@ -158,6 +160,18 @@ Creates a security system from multiple sensors and controls.
 - Optional:
   - Security Sensors (multiple)
   - Siren Control
+  - Status Sensor
+
+### Star Projector
+
+Combines a master switch, rotation fan, and laser/background lights into a single star projector device. Useful for child night lights such as Tuya/local-tuya based projectors that expose multiple entities (e.g. `switch.star_projector_master`, `fan.star_projector_rotation`, `light.star_projector_laser`, `light.star_projector_background`).
+
+- Required:
+  - Power Switch (master switch)
+- Optional:
+  - Laser Light (light entity)
+  - Background/Nebula Light (light entity)
+  - Rotation Fan (fan entity)
   - Status Sensor
 
 ## HomeKit Integration

@@ -4,22 +4,15 @@ from __future__ import annotations
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import (
-    ATTR_NAME,
-    STATE_ON,
-    STATE_OFF,
-    UnitOfTemperature,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.const import STATE_ON, UnitOfTemperature
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import DOMAIN, CONF_NAME, CONF_DEVICE_TYPE
+from .const import DOMAIN, CONF_NAME
 from .homekit_type import (
     CHAR_CURRENT_TEMPERATURE,
-    CHAR_TARGET_TEMPERATURE,
     CHAR_HEATING_COOLING_CURRENT,
 )
 
@@ -49,16 +42,17 @@ class HomeKitDeviceEntity:
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
-        async def _update_from_source(entity_id, old_state, new_state):
+        async def _handle_state_change(event: Event[EventStateChangedData]) -> None:
+            new_state = event.data["new_state"]
             if new_state is None:
                 return
             await self.async_update_from_source(new_state)
 
         self.async_on_remove(
-            async_track_state_change(
+            async_track_state_change_event(
                 self.hass,
-                self._source_entity,
-                _update_from_source
+                [self._source_entity],
+                _handle_state_change,
             )
         )
 
@@ -150,4 +144,46 @@ class HomeKitDeviceSelect(HomeKitDeviceEntity, SelectEntity):
             self._attr_current_option = "On" if state.state != "Off" else "Off"
         else:
             self._attr_current_option = state.state
+        self.async_write_ha_state()
+
+class HomeKitDeviceFan(HomeKitDeviceEntity, FanEntity):
+    """Representation of a HomeKit Device fan."""
+
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs,
+    ) -> None:
+        """Turn the fan on."""
+        data: dict[str, object] = {"entity_id": self._source_entity}
+        if percentage is not None:
+            data["percentage"] = percentage
+        await self.hass.services.async_call("fan", "turn_on", data)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the fan off."""
+        await self.hass.services.async_call(
+            "fan", "turn_off", {"entity_id": self._source_entity}
+        )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the fan speed percentage."""
+        await self.hass.services.async_call(
+            "fan",
+            "set_percentage",
+            {"entity_id": self._source_entity, "percentage": percentage},
+        )
+
+    async def async_update_from_source(self, state) -> None:
+        """Update the entity from the source entity state."""
+        self._attr_is_on = state.state == STATE_ON
+        if (percentage := state.attributes.get("percentage")) is not None:
+            self._attr_percentage = percentage
         self.async_write_ha_state()

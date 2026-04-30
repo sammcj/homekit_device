@@ -1,12 +1,6 @@
 """HomeKit device type definitions."""
-from homeassistant.components.homekit.const import (
-    SERV_SWITCH,
-    SERV_THERMOSTAT,
-)
-from homeassistant.const import (
-    DEVICE_CLASS_POWER,
-    UnitOfTemperature,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.const import UnitOfTemperature
 
 # HomeKit Categories (from HAP-python)
 CATEGORY_KETTLE = 27
@@ -66,7 +60,7 @@ KETTLE_DEVICE_TYPE = {
                 {
                     "name": "Power State",
                     "char": CHAR_ON,
-                    "device_class": DEVICE_CLASS_POWER,
+                    "device_class": BinarySensorDeviceClass.POWER,
                 },
             ],
         },

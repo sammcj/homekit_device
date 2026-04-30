@@ -40,7 +40,8 @@ DEVICE_TYPES = {
     "humidifier": "A humidifier with humidity sensing and control",
     "air_purifier": "An air purifier with air quality monitoring",
     "garage_door": "A garage door with multiple sensors",
-    "security_system": "A security system with multiple sensors and controls"
+    "security_system": "A security system with multiple sensors and controls",
+    "star_projector": "A star projector with master switch, rotation fan, and laser/background lights"
 }
 
 # Configuration keys for all device types
@@ -79,6 +80,8 @@ CONF_AIR_QUALITY = "air_quality"
 CONF_FILTER_LIFE = "filter_life"
 CONF_PM25 = "pm25"
 CONF_VOC = "voc"
+CONF_CHILD_LOCK = "child_lock"
+CONF_DISPLAY_SWITCH = "display_switch"
 
 # Garage door related configs
 CONF_DOOR_POSITION = "door_position"
@@ -91,6 +94,11 @@ CONF_ALARM_STATE = "alarm_state"
 CONF_SENSORS = "sensors"  # List of security sensors
 CONF_SIREN = "siren"
 CONF_KEYPAD = "keypad"
+
+# Star projector related configs
+CONF_LASER_LIGHT = "laser_light"
+CONF_BACKGROUND_LIGHT = "background_light"
+CONF_ROTATION_FAN = "rotation_fan"
 
 # Default values
 DEFAULT_NAME = "Aggregated Device"

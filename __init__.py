@@ -21,6 +21,7 @@ PLATFORMS: Final = [
     Platform.SELECT,
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.FAN,
 ]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
