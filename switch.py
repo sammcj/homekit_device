@@ -29,15 +29,16 @@ async def async_setup_entry(
     base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
-    # Common power switch for all device types
-    power_switch = config_entry.data.get(CONF_POWER_SWITCH)
-    if power_switch:
+    # Common power entity — only wrap if it's a switch domain entity. Fan
+    # domain power entities are wrapped by fan.py instead.
+    power = config_entry.data.get(CONF_POWER_SWITCH)
+    if power and power.startswith("switch."):
         entities.append(
             HomeKitDeviceSwitch(
                 hass,
                 config_entry.entry_id,
                 f"{base_name} Power",
-                power_switch,
+                power,
             )
         )
 

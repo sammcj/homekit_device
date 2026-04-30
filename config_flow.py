@@ -111,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_type = self._data[CONF_DEVICE_TYPE]
         base_schema = {
             vol.Required(CONF_POWER_SWITCH): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="switch")
+                selector.EntitySelectorConfig(domain=["switch", "fan"])
             ),
             vol.Optional(CONF_STATUS_SENSOR): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")

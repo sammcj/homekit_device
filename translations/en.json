@@ -13,7 +13,7 @@
                 "title": "Configure Device Entities",
                 "description": "Select the entities to combine into a single HomeKit device",
                 "data": {
-                    "power_switch": "Power Switch",
+                    "power_switch": "Power Entity (switch or fan)",
                     "status_sensor": "Status Sensor (Optional)",
                     "current_temperature": "Current Temperature Sensor",
                     "target_temperature": "Target Temperature Control",
@@ -88,7 +88,7 @@
         "star_projector": "Combines a master switch, rotation fan and laser/background lights into a single star projector device"
     },
     "entity_descriptions": {
-        "power_switch": "Main power control for the device",
+        "power_switch": "Main power control — accepts a switch or a fan entity (fan-domain power exposes percentage speed in HomeKit)",
         "status_sensor": "Displays the device's current status",
         "current_temperature": "Shows the current water temperature",
         "target_temperature": "Sets the target water temperature",
