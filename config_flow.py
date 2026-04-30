@@ -184,7 +184,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             },
             "air_purifier": {
-                vol.Required(CONF_AIR_QUALITY): selector.EntitySelector(
+                vol.Optional(CONF_AIR_QUALITY): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
                 vol.Optional(CONF_FILTER_LIFE): selector.EntitySelector(

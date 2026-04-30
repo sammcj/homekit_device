@@ -128,9 +128,9 @@ Combines humidity sensing and control into a smart humidifier.
 Creates an air purifier with air quality monitoring.
 
 - Required:
-  - Power Switch
-  - Air Quality Sensor
+  - Power Entity (switch or fan)
 - Optional:
+  - Air Quality Sensor
   - Filter Life Sensor
   - PM2.5 Sensor
   - VOC Sensor
