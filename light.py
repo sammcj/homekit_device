@@ -21,6 +21,7 @@ class HomeKitDeviceLight(HomeKitDeviceEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Mirror the source entity's supported color modes once it is known."""
         modes: set[ColorMode] = {ColorMode.ONOFF}
+        active: ColorMode | None = None
         if (state := self.hass.states.get(self._source_entity)) is not None:
             source_modes = state.attributes.get("supported_color_modes") or ()
             parsed: set[ColorMode] = set()
@@ -31,9 +32,21 @@ class HomeKitDeviceLight(HomeKitDeviceEntity, LightEntity):
                     continue
             if parsed:
                 modes = parsed
+            if (raw_mode := state.attributes.get("color_mode")) is not None:
+                try:
+                    active = ColorMode(raw_mode)
+                except ValueError:
+                    active = None
         self._attr_supported_color_modes = modes
         if self._attr_color_mode is None:
-            self._attr_color_mode = next(iter(modes))
+            # Prefer the source's reported mode; otherwise pick a deterministic
+            # default so HomeKit characteristics don't flap across restarts.
+            if active is not None and active in modes:
+                self._attr_color_mode = active
+            elif ColorMode.ONOFF in modes:
+                self._attr_color_mode = ColorMode.ONOFF
+            else:
+                self._attr_color_mode = sorted(modes, key=lambda m: m.value)[0]
         await super().async_added_to_hass()
 
     async def async_turn_on(self, **kwargs) -> None:

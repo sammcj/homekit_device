@@ -1,9 +1,5 @@
 """HomeKit device type definitions."""
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.homekit.const import (
-    SERV_SWITCH,
-    SERV_THERMOSTAT,
-)
 from homeassistant.const import UnitOfTemperature
 
 # HomeKit Categories (from HAP-python)
