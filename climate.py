@@ -59,10 +59,13 @@ class HomeKitDeviceClimate(HomeKitDeviceEntity, ClimateEntity):
         self._attr_current_temperature = 0
 
     async def async_added_to_hass(self) -> None:
-        """Read the live option list from the source select if present."""
+        """Size the level slider from the source select's option list."""
         if (state := self.hass.states.get(self._source_entity)) is not None:
             if options := state.attributes.get("options"):
                 self._options = list(options)
+                # Heat levels are the options excluding "Off"; map to a 0..N
+                # slider so blankets with fewer/more levels adapt automatically.
+                self._attr_max_temp = max(1, len(self._options) - 1)
         await super().async_added_to_hass()
 
     async def async_set_temperature(self, **kwargs) -> None:
