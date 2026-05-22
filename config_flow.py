@@ -46,6 +46,10 @@ from .const import (
     CONF_ROTATION_FAN,
     CONF_CHILD_LOCK,
     CONF_DISPLAY_SWITCH,
+    CONF_ZONE_BODY,
+    CONF_ZONE_FEET,
+    CONF_BODY_TIMER,
+    CONF_FEET_TIMER,
     DEVICE_TYPES,
     DEFAULT_NAME,
 )
@@ -240,6 +244,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(CONF_ROTATION_FAN): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="fan")
+                ),
+            },
+            "electric_blanket": {
+                vol.Required(CONF_ZONE_BODY): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="select")
+                ),
+                vol.Optional(CONF_ZONE_FEET): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="select")
+                ),
+                vol.Optional(CONF_BODY_TIMER): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="select")
+                ),
+                vol.Optional(CONF_FEET_TIMER): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="select")
                 ),
             },
         }

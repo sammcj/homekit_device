@@ -174,6 +174,21 @@ Combines a master switch, rotation fan, and laser/background lights into a singl
   - Rotation Fan (fan entity)
   - Status Sensor
 
+### Electric Blanket
+
+Combines a power switch and per-zone heat-level selects into a single multi-zone electric blanket. Each zone is exposed to HomeKit as a Heater (Off/Heat) with a 0-6 level slider, via a `climate` proxy.
+
+- Required:
+  - Power Entity (switch or fan)
+  - Body Zone Heat Level (a `select` with options like `['Off','1'..'6']`)
+- Optional:
+  - Feet Zone Heat Level (`select`)
+  - Body Zone Timer (`select`)
+  - Feet Zone Timer (`select`)
+  - Status Sensor
+
+When exposing through the HomeKit Bridge, include the `climate` and `switch` domains. The zone selects operate on their friendly option strings (`Off`, `1`..`6`); for localtuya blankets these map to the underlying `level_1..level_7` raw values automatically (`level_1` == Off).
+
 ## HomeKit Integration
 
 This integration works alongside the Home Assistant HomeKit Bridge. After configuring your aggregated device, it will appear in the Home app as a single device with all its capabilities, rather than multiple separate accessories.

@@ -41,7 +41,8 @@ DEVICE_TYPES = {
     "air_purifier": "An air purifier with air quality monitoring",
     "garage_door": "A garage door with multiple sensors",
     "security_system": "A security system with multiple sensors and controls",
-    "star_projector": "A star projector with master switch, rotation fan, and laser/background lights"
+    "star_projector": "A star projector with master switch, rotation fan, and laser/background lights",
+    "electric_blanket": "A multi-zone electric blanket with power and per-zone heat levels"
 }
 
 # Configuration keys for all device types
@@ -99,6 +100,12 @@ CONF_KEYPAD = "keypad"
 CONF_LASER_LIGHT = "laser_light"
 CONF_BACKGROUND_LIGHT = "background_light"
 CONF_ROTATION_FAN = "rotation_fan"
+
+# Electric blanket related configs
+CONF_ZONE_BODY = "zone_body"
+CONF_ZONE_FEET = "zone_feet"
+CONF_BODY_TIMER = "body_timer"
+CONF_FEET_TIMER = "feet_timer"
 
 # Default values
 DEFAULT_NAME = "Aggregated Device"

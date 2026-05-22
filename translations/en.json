@@ -46,7 +46,11 @@
                     "background_light": "Background/Nebula Light",
                     "rotation_fan": "Rotation Fan",
                     "child_lock": "Child Lock Switch",
-                    "display_switch": "Display On/Off Switch"
+                    "display_switch": "Display On/Off Switch",
+                    "zone_body": "Body Zone Heat Level",
+                    "zone_feet": "Feet Zone Heat Level",
+                    "body_timer": "Body Zone Timer",
+                    "feet_timer": "Feet Zone Timer"
                 }
             }
         },
@@ -72,7 +76,8 @@
                 "air_purifier": "Air Purifier",
                 "garage_door": "Garage Door",
                 "security_system": "Security System",
-                "star_projector": "Star Projector"
+                "star_projector": "Star Projector",
+                "electric_blanket": "Electric Blanket"
             }
         }
     },
@@ -85,7 +90,8 @@
         "air_purifier": "Creates an air purifier with air quality monitoring",
         "garage_door": "Combines door controls and sensors into a garage door opener",
         "security_system": "Creates a security system from multiple sensors and controls",
-        "star_projector": "Combines a master switch, rotation fan and laser/background lights into a single star projector device"
+        "star_projector": "Combines a master switch, rotation fan and laser/background lights into a single star projector device",
+        "electric_blanket": "Combines a power switch and per-zone heat-level selects into a single multi-zone electric blanket"
     },
     "entity_descriptions": {
         "power_switch": "Main power control — accepts a switch or a fan entity (fan-domain power exposes percentage speed in HomeKit)",
@@ -112,6 +118,10 @@
         "voc": "Shows the Volatile Organic Compounds level",
         "child_lock": "Switch that locks/unlocks the device's physical controls",
         "display_switch": "Switch that turns the device's display on or off",
+        "zone_body": "Heat-level select for the body zone (Off + levels 1-6)",
+        "zone_feet": "Heat-level select for the feet zone (Off + levels 1-6)",
+        "body_timer": "Optional auto-off timer select for the body zone",
+        "feet_timer": "Optional auto-off timer select for the feet zone",
         "door_position": "Controls and monitors the door position",
         "obstruction": "Detects obstructions in the door's path",
         "motion": "Detects motion near the door",
