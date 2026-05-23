@@ -30,9 +30,11 @@ async def async_setup_entry(
     entities = []
 
     # Common power entity — only wrap if it's a switch domain entity. Fan
-    # domain power entities are wrapped by fan.py instead.
+    # domain power entities are wrapped by fan.py instead. Electric blankets
+    # manage power implicitly (the climate zones drive the master power), so
+    # no standalone power switch is exposed.
     power = config_entry.data.get(CONF_POWER_SWITCH)
-    if power and power.startswith("switch."):
+    if power and power.startswith("switch.") and device_type != "electric_blanket":
         entities.append(
             HomeKitDeviceSwitch(
                 hass,
