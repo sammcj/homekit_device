@@ -7,7 +7,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    CONF_NAME,
     CONF_POWER_SWITCH,
     CONF_OSCILLATION,
     CONF_SIREN,
@@ -24,7 +23,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomeKit Device switches."""
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
-    base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
     # Common power entity — only wrap if it's a switch domain entity. Fan
@@ -38,7 +36,7 @@ async def async_setup_entry(
             HomeKitDeviceSwitch(
                 hass,
                 config_entry.entry_id,
-                f"{base_name} Power",
+                "Power",
                 power,
             )
         )
@@ -50,7 +48,7 @@ async def async_setup_entry(
                 HomeKitDeviceSwitch(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Keep Warm",
+                    "Keep Warm",
                     keep_warm,
                 )
             )
@@ -61,7 +59,7 @@ async def async_setup_entry(
                 HomeKitDeviceSwitch(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Oscillation",
+                    "Oscillation",
                     oscillation,
                 )
             )
@@ -72,7 +70,7 @@ async def async_setup_entry(
                 HomeKitDeviceSwitch(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Siren",
+                    "Siren",
                     siren,
                 )
             )
@@ -83,7 +81,7 @@ async def async_setup_entry(
                 HomeKitDeviceSwitch(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Child Lock",
+                    "Child Lock",
                     child_lock,
                 )
             )
@@ -92,7 +90,7 @@ async def async_setup_entry(
                 HomeKitDeviceSwitch(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Display",
+                    "Display",
                     display_switch,
                 )
             )
