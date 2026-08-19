@@ -1,0 +1,16 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+norecursedirs = [".git", ".venv"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# Pinned to the rules this codebase currently satisfies. ASYNC is here because
+# the integration is entirely coroutines, so a blocking call on an event loop
+# path is the defect most worth catching automatically. I, UP, SIM, RUF and
+# FURB are left out: they flag 31 pre-existing findings (import ordering,
+# typing.Dict, nested ifs) that are cosmetic and belong in their own cleanup.
+select = ["E", "W", "F", "B", "C4", "PIE", "RET", "ASYNC"]

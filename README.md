@@ -252,6 +252,16 @@ The old `select.*` and `switch.*_power` registry entries linger as unavailable a
    - Verify that all entities are working in Home Assistant
    - Check the Home Assistant logs for any errors
 
+## Development
+
+```bash
+make install   # create .venv and install the test and lint dependencies
+make check     # ruff check . && pytest
+make deploy HA_CONFIG=/path/to/config   # copy the integration into a HA config dir
+```
+
+Tests use `pytest-homeassistant-custom-component` against a mocked Home Assistant. The repo root is the component, so `tests/conftest.py` builds the `custom_components/homekit_device/` package the harness expects in a temp dir and symlinks it back here. Both lint and tests run in CI on pushes to `main` and on pull requests into `main`.
+
 ## Contributing
 
 Feel free to submit issues and pull requests for:

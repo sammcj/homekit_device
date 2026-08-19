@@ -1,6 +1,8 @@
 """Platform entities for HomeKit Device Aggregator."""
 from __future__ import annotations
 
+from math import isfinite
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.select import SelectEntity
@@ -30,6 +32,22 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import DOMAIN, CONF_NAME
+
+# A source in either of these states has no value worth forwarding.
+UNREADABLE_STATES = (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+
+def _numeric_or_none(value: str) -> str | None:
+    """Return the state only when HA will accept it as a number.
+
+    float() takes "nan" and "inf" happily, but HA rejects a non-finite value
+    just as firmly as a non-numeric one, so both have to be filtered here.
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return value if isfinite(number) else None
 
 class HomeKitDeviceEntity:
     """Representation of a HomeKit Device entity."""
@@ -197,9 +215,35 @@ class HomeKitDeviceSensor(HomeKitDeviceEntity, SensorEntity):
         if diagnostic:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @property
+    def _expects_a_number(self) -> bool:
+        """Whether HA will validate this sensor's value as numeric.
+
+        HA's own test is device class or state class or unit or display
+        precision. This class only ever sets the first two of those, and a unit
+        on its own is enough - countdown, humidity, water level, filter life,
+        PM2.5 and VOC all carry a unit and no device class.
+        """
+        return (
+            self.device_class is not None
+            or self.native_unit_of_measurement is not None
+        )
+
     async def async_update_from_source(self, state) -> None:
         """Update the entity from the source entity state."""
-        self._attr_native_value = state.state
+        self._attr_available = state.state != STATE_UNAVAILABLE
+        if state.state in UNREADABLE_STATES:
+            self._attr_native_value = None
+        elif self._expects_a_number:
+            # HA validates such a sensor's value and raises inside the state
+            # write. That drops the update and leaves the proxy showing a stale
+            # reading, so anything HA would reject has to become None here.
+            # "unknown" is only the most common of these; an empty string, a
+            # short error string and a non-finite number are just as routine.
+            self._attr_native_value = _numeric_or_none(state.state)
+        else:
+            # A free-text readout (status, fault) forwards its string as-is.
+            self._attr_native_value = state.state
         self.async_write_ha_state()
 
 class HomeKitDeviceSelect(HomeKitDeviceEntity, SelectEntity):
@@ -296,8 +340,6 @@ LIFT_TO_TILT_FEATURE = {
     CoverEntityFeature.SET_POSITION: CoverEntityFeature.SET_TILT_POSITION,
 }
 
-UNREADABLE_STATES = (STATE_UNAVAILABLE, STATE_UNKNOWN)
-
 class HomeKitDeviceCover(HomeKitDeviceEntity, CoverEntity):
     """A cover that merges a separate lift entity and tilt entity into one."""
 
@@ -316,6 +358,11 @@ class HomeKitDeviceCover(HomeKitDeviceEntity, CoverEntity):
         self._tilt_entity = tilt_entity
         # The cover is the device's only entity, so it takes the device's name.
         self._attr_name = None
+        # CoverEntity deliberately gives _attr_is_closed no default, so the
+        # first state write raises AttributeError unless it is seeded here.
+        # HA restores integrations in an arbitrary order, so the lift source
+        # having no state yet when the proxy is added is routine, not an edge.
+        self._attr_is_closed = None
 
         # Optimistic defaults; replaced by whatever the sources actually
         # support as soon as their states can be read.

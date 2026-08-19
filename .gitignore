@@ -10,3 +10,5 @@ __pycache__/
 *.log
 *.swp
 .vscode/
+.pytest_cache/
+.ruff_cache/
