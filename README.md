@@ -225,7 +225,13 @@ Keep warm remains a separate switch entity and appears as its own tile.
 
 The kettle no longer creates a separate power switch entity - power is the thermostat's Off/Heat mode. The temperature, countdown, fault and status readouts are still created and grouped under the device, but marked as diagnostic so the bridge skips them. The target temperature number is kept for use in Home Assistant; the bridge does not support the `number` domain, so it never reaches HomeKit either.
 
-**Breaking change:** if you configured a kettle before this, the `switch.<name>_power` proxy is gone. Point any automations at the new `climate.<name>` entity (or at your original power switch), and delete the now-unavailable old entity from the entity registry.
+**Breaking changes** if you configured a kettle before this:
+
+- The `switch.<name>_power` proxy is gone. Point any automations at the new `climate.<name>` entity, or at your original power switch.
+- Keep warm moved from the `select` domain to `switch`, so `select.<name>_keep_warm` becomes `switch.<name>_keep_warm`. The old select never worked (it called `select.select_option` against a switch entity), so nothing functional is lost.
+- The temperature, countdown, fault and status sensors became diagnostic entities. They stay in Home Assistant but drop out of HomeKit, Alexa, Google and area-wide service calls.
+
+The old `select.*` and `switch.*_power` registry entries linger as unavailable after the upgrade; delete them from the entity registry.
 
 ## Troubleshooting
 
