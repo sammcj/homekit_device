@@ -104,7 +104,7 @@
         "target_temperature": "Sets the target water temperature. Use the kettle's own number entity if it has one, otherwise an input_number helper",
         "countdown_timer": "Shows remaining time for the current operation",
         "fault_status": "Indicates any fault conditions",
-        "keep_warm_mode": "Controls the keep warm function. Accepts a switch, an input_boolean, or a two-option select such as True/False or On/Off",
+        "keep_warm_mode": "Controls the keep warm function. Accepts a switch, an input_boolean, or a select whose options include an on/off pair such as True/False. A select with more than two options is on only while it sits on the matched on option, and turning it on from HomeKit selects that option",
         "temperature_sensors": "Additional temperature sensors to monitor",
         "speed_control": "Controls the fan speed",
         "oscillation": "Controls the fan's oscillation",

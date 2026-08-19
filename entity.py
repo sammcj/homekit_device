@@ -111,10 +111,14 @@ class HomeKitDeviceSwitch(HomeKitDeviceEntity, SwitchEntity):
             return
         on = next((o for o in options if o.strip().casefold() in TRUTHY_OPTIONS), None)
         off = next((o for o in options if o.strip().casefold() in FALSEY_OPTIONS), None)
-        if on is None or off is None:
-            # Unrecognised labels. Selects conventionally list the off state
-            # first, so fall back to that rather than refusing to work.
+        if on is None and off is None:
+            # Nothing recognised. Selects conventionally list the off state
+            # first, so fall back to the ends rather than refusing to work.
             off, on = options[0], options[-1]
+        elif on is None:
+            on = next((o for o in reversed(options) if o != off), None)
+        elif off is None:
+            off = next((o for o in options if o != on), None)
         self._on_option, self._off_option = on, off
 
     async def _select_option(self, turn_on: bool) -> None:
