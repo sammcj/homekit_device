@@ -23,6 +23,7 @@ PLATFORMS: Final = [
     Platform.LIGHT,
     Platform.FAN,
     Platform.CLIMATE,
+    Platform.COVER,
 ]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

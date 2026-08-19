@@ -1,13 +1,13 @@
 # HomeKit Device Aggregator for Home Assistant
 
-This custom integration for Home Assistant allows you to combine multiple entities into a single HomeKit device. This solves the common issue where multiple related entities appear as separate devices in HomeKit.
+This custom integration for Home Assistant combines several related entities into one proxy entity, so the HomeKit Bridge exposes them as one accessory with several characteristics instead of one tile per entity.
 
 ## Features
 
-- Combine multiple Home Assistant entities into a single HomeKit device
+- Collapse related entities into a single richer entity - a kettle's power, current and target temperature become one thermostat; a shutter's lift and tilt become one window covering (kettle, electric blanket and shutter only)
+- Group the remaining entities under one Home Assistant device
 - Configure through the Home Assistant UI
 - Real-time state synchronisation between Home Assistant and HomeKit
-- Supports multiple device types with specific HomeKit characteristics
 
 ## Installation
 
@@ -23,9 +23,11 @@ This custom integration for Home Assistant allows you to combine multiple entiti
 
 ## Supported Device Types
 
+Three types currently collapse their sources into a single richer entity, which is what produces one HomeKit accessory: **Smart Kettle**, **Electric Blanket** and **Shutter**. The rest only group their entities under one Home Assistant device - each still becomes its own HomeKit tile, and several of their configuration options are collected but not yet acted on. Each section below says which.
+
 ### Smart Kettle
 
-Combines all kettle controls and sensors into a single HomeKit kettle device.
+Combines the kettle's power, current temperature and target temperature into a single HomeKit thermostat accessory. Keep warm and the diagnostic sensors stay separate - see [Kettle Features in HomeKit](#kettle-features-in-homekit).
 
 #### Setup Steps
 
@@ -34,12 +36,12 @@ Combines all kettle controls and sensors into a single HomeKit kettle device.
    - Click "+ Create Helper"
    - Create an "Input Number" helper for target temperature:
      * Name: "Kettle Target Temperature"
-     * Minimum value: 0
+     * Minimum value: 40 (a minimum of 0 is raised to 1 - the bridge treats 0 as "unset" and builds a broken range)
      * Maximum value: 100
      * Step size: 1
      * Unit of measurement: °C
      * Icon: mdi:thermometer
-   - Create a "Switch" helper for keep warm mode:
+   - Create a "Toggle" helper for keep warm mode:
      * Name: "Kettle Keep Warm"
      * Icon: mdi:kettle-steam
 
@@ -53,79 +55,68 @@ Combines all kettle controls and sensors into a single HomeKit kettle device.
      * Power Switch: Your kettle's power switch
      * Current Temperature: Your kettle's temperature sensor
      * Target Temperature: input_number.kettle_target_temperature
-     * Keep Warm: input_boolean.kettle_keep_warm
+     * Keep Warm: input_boolean.kettle_keep_warm (a switch entity also works)
 
 3. Configure the HomeKit Bridge:
    - Go to Settings > Devices & Services
    - Find "HomeKit Bridge" and click "Configure"
    - Add a new bridge configuration
    - Include these domains:
-     * switch
-     * sensor
-     * input_number
-     * input_boolean
-   - The kettle will appear in HomeKit as a single device with:
-     * Power toggle
-     * Temperature display
-     * Temperature control slider
-     * Keep warm mode toggle
+     * climate (the aggregated kettle thermostat)
+     * switch (for the keep warm toggle)
+   - The kettle appears in HomeKit as one thermostat (power, current temperature, target temperature) plus a separate keep warm switch
 
 - Required:
-  - Power Switch (switch.kettle)
-  - Current Temperature (sensor.kettle_temperature)
-  - Target Temperature (input_number helper)
-  - Keep Warm Mode (input_boolean helper)
+  - Power Switch (`switch.kettle`)
+- Optional:
+  - Current Temperature (`sensor.kettle_temperature`)
+  - Target Temperature (`input_number` helper)
+  - Keep Warm Mode (`input_boolean` or `switch`)
+  - Countdown Timer, Fault Status, Status Sensor
+
 ### Multi-Sensor Thermostat
 
-Creates a thermostat with multiple temperature sensors and controls.
+Grouping only. No climate entity is created for this type - the current temperature, target temperature and additional sensor options are collected but not yet wired up. What you get is a power switch proxy and a status sensor grouped under one device.
 
-- Required:
-  - Power Switch
-  - Current Temperature Sensor
-  - Target Temperature Control
+- Required by the form:
+  - Power Switch, Current Temperature Sensor, Target Temperature Control
 - Optional:
-  - Additional Temperature Sensors
-  - Status Sensor
+  - Status Sensor, Additional Temperature Sensors
+- Collected but not yet used: Current Temperature Sensor, Target Temperature Control, Additional Temperature Sensors
 
 ### Multi-Control Fan
 
-Combines fan controls into a single device.
+Groups fan controls under one device. A single HomeKit fan accessory with a speed slider only appears when the power entity is itself a `fan.*` entity; oscillation and direction become their own entities, and so their own tiles.
 
 - Required:
-  - Power Switch
+  - Power Entity (switch or fan)
 - Optional:
-  - Speed Control
-  - Oscillation Control
-  - Direction Control
-  - Status Sensor
+  - Oscillation Control, Direction Control, Status Sensor
+- Collected but not yet used: Speed Control
 
 ### Multi-Control Light
 
-Aggregates light controls into a single light device.
+Grouping only. No light entity is created for this type - use Home Assistant's own light grouping or a template light instead.
 
 - Required:
   - Power Switch
 - Optional:
-  - Brightness Control
-  - Colour Temperature Control
-  - RGB Colour Control
   - Status Sensor
+- Collected but not yet used: Brightness Control, Colour Temperature Control, RGB Colour Control
 
 ### Smart Humidifier
 
-Combines humidity sensing and control into a smart humidifier.
+Grouping only. No humidifier entity is created for this type; the humidity and water level readings become sensor entities grouped under one device.
 
-- Required:
-  - Power Switch
-  - Current Humidity Sensor
-  - Target Humidity Control
+- Required by the form:
+  - Power Switch, Current Humidity Sensor, Target Humidity Control
 - Optional:
-  - Water Level Sensor
-  - Status Sensor
+  - Water Level Sensor, Status Sensor
+- Collected but not yet used: Target Humidity Control
 
 ### Air Purifier
 
-Creates an air purifier with air quality monitoring.
+Groups an air purifier's controls and air quality readings under one device. Each becomes its own entity, so each becomes its own HomeKit tile.
 
 - Required:
   - Power Entity (switch or fan)
@@ -140,31 +131,27 @@ Creates an air purifier with air quality monitoring.
 
 ### Garage Door
 
-Combines door controls and sensors into a garage door opener.
+Grouping only. No garage door accessory is created - expose your original `cover` entity to the bridge for that. The obstruction, motion and light options become their own grouped entities.
 
-- Required:
-  - Power Switch
-  - Door Position Control
+- Required by the form:
+  - Power Switch, Door Position Control
 - Optional:
-  - Obstruction Sensor
-  - Motion Sensor
-  - Light Control
-  - Status Sensor
+  - Obstruction Sensor, Motion Sensor, Light Control, Status Sensor
+- Collected but not yet used: Door Position Control
 
 ### Security System
 
-Creates a security system from multiple sensors and controls.
+Grouping only. No alarm panel accessory is created - expose your original `alarm_control_panel` entity to the bridge for that.
 
-- Required:
-  - Alarm State Control
+- Required by the form:
+  - Power Switch, Alarm State Control
 - Optional:
-  - Security Sensors (multiple)
-  - Siren Control
-  - Status Sensor
+  - Security Sensors (multiple), Siren Control, Status Sensor
+- Collected but not yet used: Alarm State Control
 
 ### Star Projector
 
-Combines a master switch, rotation fan, and laser/background lights into a single star projector device. Useful for child night lights such as Tuya/local-tuya based projectors that expose multiple entities (e.g. `switch.star_projector_master`, `fan.star_projector_rotation`, `light.star_projector_laser`, `light.star_projector_background`).
+Groups a master switch, rotation fan and laser/background lights under one device. Each stays its own entity, so HomeKit shows one tile per control rather than a single projector accessory. Useful for child night lights such as Tuya/local-tuya based projectors that expose multiple entities (e.g. `switch.star_projector_master`, `fan.star_projector_rotation`, `light.star_projector_laser`, `light.star_projector_background`).
 
 - Required:
   - Power Switch (master switch)
@@ -183,34 +170,68 @@ Combines a power switch and per-zone heat-level selects into a single multi-zone
   - Body Zone Heat Level (a `select` with options like `['Off','1'..'6']`)
 - Optional:
   - Feet Zone Heat Level (`select`)
-  - Body Zone Timer (`select`)
-  - Feet Zone Timer (`select`)
   - Status Sensor
+- Collected but not yet used: Body Zone Timer, Feet Zone Timer
 
 When exposing through the HomeKit Bridge, include the `climate` and `switch` domains. The zone selects operate on their friendly option strings (`Off`, `1`..`6`); for localtuya blankets these map to the underlying `level_1..level_7` raw values automatically (`level_1` == Off).
 
+### Shutter (lift + tilt)
+
+Combines two separate cover entities - one that raises/lowers the shutter and one that angles the slats - into a single HomeKit window covering with both a position slider and a tilt slider.
+
+- Required:
+  - Lift Cover (up/down `cover` entity)
+- Optional:
+  - Tilt Cover (`cover` entity controlling slat angle)
+
+If the tilt entity supports setting a tilt position (`SET_TILT_POSITION`), it is driven through its tilt services. Otherwise - the common case where a shutter's tilt is exposed as a second position-only cover - its lift position drives the tilt slider instead.
+
+Only the controls the source entities actually support are exposed. A shutter with open/close but no position support is bridged as `WindowCoveringBasic`, so HomeKit still shows a slider but it snaps to fully open or fully closed. The same entity can be used for both halves only if it supports tilt itself.
+
+When exposing through the HomeKit Bridge, include the `cover` domain and exclude the two original cover entities so only the aggregated shutter appears.
+
 ## HomeKit Integration
 
-This integration works alongside the Home Assistant HomeKit Bridge. After configuring your aggregated device, it will appear in the Home app as a single device with all its capabilities, rather than multiple separate accessories.
+This integration works alongside the Home Assistant HomeKit Bridge.
 
 ### How it Works
 
-1. The integration creates a single device in Home Assistant that groups all related entities
-2. When exposed through the HomeKit Bridge, it appears as a single accessory in HomeKit
-3. The integration maps Home Assistant entities to appropriate HomeKit characteristics:
-   - Switches become binary controls
-   - Sensors become read-only characteristics
-   - Input numbers become sliders
-   - Input booleans become toggles
+The HomeKit Bridge allocates one accessory per **entity**, not per Home Assistant device, and never merges two accessories because their entities share a device. Grouping entities under one device tidies the Home Assistant UI but does not, on its own, produce one tile in the Home app.
+
+So the aggregation has to happen at the entity level, and that is what this integration does:
+
+1. Related source entities are collapsed into a single proxy entity of a type that carries all of them as characteristics - `climate` for the kettle, `cover` for the shutter
+2. That one entity becomes one HomeKit accessory with power, current temperature, setpoint and so on all on the same card
+3. Controls that have no home on that accessory (a keep-warm switch, a projector's separate lights) stay as their own entities, and so get their own tiles - this is a HomeKit limitation, not something the integration can hide
+4. Readouts already carried by the primary accessory (temperature, status, countdown, fault) are marked as diagnostic entities. The bridge skips entities that carry a category, so they stay grouped in Home Assistant and out of the Home app - unless you list them individually in the bridge's included entities, which overrides the skip
+
+There is a narrow exception where the device grouping does help. The bridge auto-links a few sibling entities from the same device onto an accessory as extra characteristics, gated on the accessory entity's own domain:
+
+- battery level and battery charging - any domain
+- motion - camera accessories only
+- doorbell - camera and lock accessories only
+- humidity, PM2.5 and temperature - fan accessories only
+
+So for the accessories this integration produces, only the battery pair applies, plus the fan-gated three when the power entity is a `fan.*`. Every other `linked_*` option (obstruction, filter life, valve timing) is manual YAML only and is never auto-populated.
 
 ### Kettle Features in HomeKit
 
-When you open the Home app, your kettle will appear as a single device with:
-- Power on/off
-- Current temperature display (in °C)
-- Temperature control slider (0-100°C)
-- Keep warm mode toggle (On/Off)
-- All controls are accessible from the same device card
+The kettle is exposed as a single thermostat accessory carrying:
+- Power on/off (Off/Heat)
+- Current water temperature
+- Target temperature slider, ranged from the target temperature helper's own min/max
+
+Keep warm remains a separate switch entity and appears as its own tile.
+
+The kettle no longer creates a separate power switch entity - power is the thermostat's Off/Heat mode. The temperature, countdown, fault and status readouts are still created and grouped under the device, but marked as diagnostic so the bridge skips them. The target temperature number is kept for use in Home Assistant; the bridge does not support the `number` domain, so it never reaches HomeKit either.
+
+**Breaking changes** if you configured a kettle before this:
+
+- The `switch.<name>_power` proxy is gone. Point any automations at the new `climate.<name>` entity, or at your original power switch.
+- Keep warm moved from the `select` domain to `switch`, so `select.<name>_keep_warm` becomes `switch.<name>_keep_warm`. The old select never worked (it called `select.select_option` against a switch entity), so nothing functional is lost.
+- The temperature, countdown, fault and status sensors became diagnostic entities. They stay in Home Assistant but drop out of HomeKit, Alexa, Google and area-wide service calls.
+
+The old `select.*` and `switch.*_power` registry entries linger as unavailable after the upgrade; delete them from the entity registry.
 
 ## Troubleshooting
 
