@@ -59,7 +59,7 @@ async def async_setup_entry(
                     HomeKitDeviceBinarySensor(
                         hass,
                         config_entry.entry_id,
-                        "Sensor {i}",
+                        f"Sensor {i}",
                         sensor,
                     )
                 )
