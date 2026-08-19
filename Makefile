@@ -57,10 +57,16 @@ check: lint test
 
 # The repo root is the component, so it is copied to a directory named after
 # the domain rather than installed as a package.
+# Staged through a temp dir so rsync sees one complete tree. Given individual
+# file sources instead, --delete has nothing to compare the destination root
+# against and silently leaves files behind - a renamed or deleted platform
+# module would stay installed and Home Assistant would keep loading it.
 deploy:
 	@test -d "$(HA_CONFIG)" || { echo "No such directory: $(HA_CONFIG)" >&2; exit 1; }
-	mkdir -p "$(HA_CONFIG)/custom_components/$(DOMAIN)"
-	rsync -a --delete $(DEPLOY_PATHS) "$(HA_CONFIG)/custom_components/$(DOMAIN)/"
+	@stage=$$(mktemp -d) && trap 'rm -rf "$$stage"' EXIT && \
+		cp -R $(DEPLOY_PATHS) "$$stage/" && \
+		mkdir -p "$(HA_CONFIG)/custom_components/$(DOMAIN)" && \
+		rsync -a --delete "$$stage/" "$(HA_CONFIG)/custom_components/$(DOMAIN)/"
 
 clean:
 	rm -rf $(VENV) .pytest_cache .ruff_cache
