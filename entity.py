@@ -79,13 +79,65 @@ class HomeKitDeviceEntity:
         """Update the entity from the source entity state."""
         raise NotImplementedError
 
+# Two-option selects are a common way for a device to expose a boolean. The
+# labels vary by vendor, so match against the source's own options rather than
+# assuming any particular pair.
+TRUTHY_OPTIONS = {"true", "on", "yes", "enable", "enabled", "1"}
+FALSEY_OPTIONS = {"false", "off", "no", "disable", "disabled", "0"}
+SELECT_DOMAINS = ("select", "input_select")
+
 class HomeKitDeviceSwitch(HomeKitDeviceEntity, SwitchEntity):
-    """Representation of a HomeKit Device switch."""
+    """A switch proxy over a switch, input_boolean or two-option select source."""
 
     _attr_device_class = "switch"
 
+    def __init__(
+        self, hass: HomeAssistant, entry_id: str, name: str, entity_id: str
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(hass, entry_id, name, entity_id)
+        self._source_domain = entity_id.split(".")[0]
+        self._on_option: str | None = None
+        self._off_option: str | None = None
+
+    @property
+    def _source_is_select(self) -> bool:
+        return self._source_domain in SELECT_DOMAINS
+
+    def _read_options(self, state) -> None:
+        """Work out which of the source's options mean on and off."""
+        options = state.attributes.get("options") or []
+        if len(options) < 2:
+            return
+        on = next((o for o in options if o.strip().casefold() in TRUTHY_OPTIONS), None)
+        off = next((o for o in options if o.strip().casefold() in FALSEY_OPTIONS), None)
+        if on is None or off is None:
+            # Unrecognised labels. Selects conventionally list the off state
+            # first, so fall back to that rather than refusing to work.
+            off, on = options[0], options[-1]
+        self._on_option, self._off_option = on, off
+
+    async def _select_option(self, turn_on: bool) -> None:
+        """Forward the on or off option to a select-backed source."""
+        if self._on_option is None or self._off_option is None:
+            # Options weren't readable when the state was last seen; try again
+            # rather than silently dropping the command.
+            if state := self.hass.states.get(self._source_entity):
+                self._read_options(state)
+        option = self._on_option if turn_on else self._off_option
+        if option is None:
+            return
+        await self.hass.services.async_call(
+            self._source_domain,
+            "select_option",
+            {"entity_id": self._source_entity, "option": option},
+        )
+
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
+        if self._source_is_select:
+            await self._select_option(True)
+            return
         # Generic service so a switch, input_boolean or light source all work.
         await self.hass.services.async_call(
             "homeassistant", "turn_on", {"entity_id": self._source_entity}
@@ -93,13 +145,31 @@ class HomeKitDeviceSwitch(HomeKitDeviceEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
+        if self._source_is_select:
+            await self._select_option(False)
+            return
         await self.hass.services.async_call(
             "homeassistant", "turn_off", {"entity_id": self._source_entity}
         )
 
     async def async_update_from_source(self, state) -> None:
         """Update the entity from the source entity state."""
-        self._attr_is_on = state.state == STATE_ON
+        if state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
+        if self._source_is_select:
+            self._read_options(state)
+            # Compare against the on option, so an unknown state reads as off
+            # rather than as "anything that isn't off".
+            self._attr_is_on = (
+                self._on_option is not None
+                and state.state.casefold() == self._on_option.casefold()
+            )
+        else:
+            self._attr_is_on = state.state == STATE_ON
         self.async_write_ha_state()
 
 class HomeKitDeviceSensor(HomeKitDeviceEntity, SensorEntity):
