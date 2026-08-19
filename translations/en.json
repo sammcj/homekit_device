@@ -20,7 +20,6 @@
                     "countdown_timer": "Countdown Timer",
                     "fault_status": "Fault Status",
                     "keep_warm_mode": "Keep Warm Mode",
-                    "keep_warm_idle_time": "Keep Warm Idle Time (minutes)",
                     "temperature_sensors": "Additional Temperature Sensors",
                     "speed_control": "Fan Speed Control",
                     "oscillation": "Oscillation Control",
@@ -36,8 +35,6 @@
                     "pm25": "PM2.5 Sensor",
                     "voc": "VOC Sensor",
                     "door_position": "Door Position Sensor/Control",
-                    "obstruction": "Obstruction Sensor",
-                    "motion": "Motion Sensor",
                     "light_switch": "Light Control",
                     "alarm_state": "Alarm State Control",
                     "sensors": "Security Sensors",
@@ -50,7 +47,11 @@
                     "zone_body": "Body Zone Heat Level",
                     "zone_feet": "Feet Zone Heat Level",
                     "body_timer": "Body Zone Timer",
-                    "feet_timer": "Feet Zone Timer"
+                    "feet_timer": "Feet Zone Timer",
+                    "lift_cover": "Lift Cover (up/down)",
+                    "tilt_cover": "Tilt Cover (slat angle, optional)",
+                    "obstruction_detected": "Obstruction Sensor",
+                    "motion_sensor": "Motion Sensor"
                 }
             }
         },
@@ -59,7 +60,8 @@
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error",
             "entity_not_found": "Entity not found",
-            "invalid_entity": "Invalid entity type"
+            "invalid_entity": "Invalid entity type",
+            "tilt_same_as_lift": "The tilt cover must be a different entity, unless it supports tilt control itself"
         },
         "abort": {
             "already_configured": "Device is already configured"
@@ -77,21 +79,23 @@
                 "garage_door": "Garage Door",
                 "security_system": "Security System",
                 "star_projector": "Star Projector",
-                "electric_blanket": "Electric Blanket"
+                "electric_blanket": "Electric Blanket",
+                "shutter": "Shutter (lift + tilt)"
             }
         }
     },
     "device_descriptions": {
-        "kettle": "Combines power control, temperature settings, keep warm functionality, and monitoring into a single HomeKit kettle",
-        "thermostat": "Creates a thermostat with multiple temperature sensors and controls",
-        "fan": "Combines fan controls (power, speed, oscillation, direction) into one device",
-        "light": "Aggregates light controls (power, brightness, colour) into a single light",
-        "humidifier": "Combines humidity sensing and control into a smart humidifier",
-        "air_purifier": "Creates an air purifier with air quality monitoring",
-        "garage_door": "Combines door controls and sensors into a garage door opener",
-        "security_system": "Creates a security system from multiple sensors and controls",
-        "star_projector": "Combines a master switch, rotation fan and laser/background lights into a single star projector device",
-        "electric_blanket": "Combines a power switch and per-zone heat-level selects into a single multi-zone electric blanket"
+        "kettle": "Combines power, current temperature and target temperature into a single HomeKit thermostat",
+        "thermostat": "Groups temperature sensors and controls under one device (no aggregated thermostat entity yet)",
+        "fan": "Groups fan controls under one device; a single fan accessory only when the power entity is a fan",
+        "light": "Groups light controls under one device (no aggregated light entity yet)",
+        "humidifier": "Groups humidity sensing and control under one device (no aggregated humidifier entity yet)",
+        "air_purifier": "Groups an air purifier's controls and air quality sensors under one device",
+        "garage_door": "Groups door sensors and light under one device (no aggregated garage door accessory yet)",
+        "security_system": "Groups security sensors and siren under one device (no aggregated alarm accessory yet)",
+        "star_projector": "Groups a master switch, rotation fan and laser/background lights under one device",
+        "electric_blanket": "Combines a power switch and per-zone heat-level selects into per-zone HomeKit heaters",
+        "shutter": "Combines separate lift and tilt cover entities into a single HomeKit window covering"
     },
     "entity_descriptions": {
         "power_switch": "Main power control — accepts a switch or a fan entity (fan-domain power exposes percentage speed in HomeKit)",
@@ -101,7 +105,6 @@
         "countdown_timer": "Shows remaining time for the current operation",
         "fault_status": "Indicates any fault conditions",
         "keep_warm_mode": "Controls the keep warm function",
-        "keep_warm_idle_time": "Sets how long to maintain the keep warm temperature",
         "temperature_sensors": "Additional temperature sensors to monitor",
         "speed_control": "Controls the fan speed",
         "oscillation": "Controls the fan's oscillation",
@@ -123,14 +126,16 @@
         "body_timer": "Optional auto-off timer select for the body zone",
         "feet_timer": "Optional auto-off timer select for the feet zone",
         "door_position": "Controls and monitors the door position",
-        "obstruction": "Detects obstructions in the door's path",
-        "motion": "Detects motion near the door",
         "light_switch": "Controls the associated light",
         "alarm_state": "Controls the security system's state",
         "sensors": "Security sensors to monitor",
         "siren": "Controls the security system's siren",
         "laser_light": "Star/laser projection light with brightness control",
         "background_light": "Nebula/background light with brightness and colour control",
-        "rotation_fan": "Fan entity that controls rotation speed of the projection"
+        "rotation_fan": "Fan entity that controls rotation speed of the projection",
+        "lift_cover": "Cover entity that raises and lowers the shutter",
+        "tilt_cover": "Cover entity that angles the slats - used directly if it supports setting a tilt position, otherwise its lift position is driven instead",
+        "obstruction_detected": "Detects obstructions in the door's path",
+        "motion_sensor": "Detects motion near the door"
     }
 }

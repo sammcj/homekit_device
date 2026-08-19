@@ -1,8 +1,6 @@
 """Platform for switch integration."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -31,10 +29,11 @@ async def async_setup_entry(
 
     # Common power entity — only wrap if it's a switch domain entity. Fan
     # domain power entities are wrapped by fan.py instead. Electric blankets
-    # manage power implicitly (the climate zones drive the master power), so
-    # no standalone power switch is exposed.
+    # manage power implicitly (the climate zones drive the master power) and
+    # kettles carry power as their thermostat's Off/Heat mode, so neither
+    # exposes a standalone power switch.
     power = config_entry.data.get(CONF_POWER_SWITCH)
-    if power and power.startswith("switch.") and device_type != "electric_blanket":
+    if power and power.startswith("switch.") and device_type not in ("electric_blanket", "kettle"):
         entities.append(
             HomeKitDeviceSwitch(
                 hass,
@@ -45,7 +44,18 @@ async def async_setup_entry(
         )
 
     # Device-specific switches
-    if device_type == "fan":
+    if device_type == "kettle":
+        if keep_warm := config_entry.data.get(CONF_KEEP_WARM):
+            entities.append(
+                HomeKitDeviceSwitch(
+                    hass,
+                    config_entry.entry_id,
+                    f"{base_name} Keep Warm",
+                    keep_warm,
+                )
+            )
+
+    elif device_type == "fan":
         if oscillation := config_entry.data.get(CONF_OSCILLATION):
             entities.append(
                 HomeKitDeviceSwitch(

@@ -6,17 +6,20 @@ import asyncio
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_TEMPERATURE, STATE_ON, UnitOfTemperature
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 
 from .const import (
     DOMAIN,
+    CONF_CURRENT_TEMP,
     CONF_POWER_SWITCH,
+    CONF_TARGET_TEMP,
     CONF_ZONE_BODY,
     CONF_ZONE_FEET,
 )
@@ -211,6 +214,166 @@ class HomeKitDeviceClimate(HomeKitDeviceEntity, ClimateEntity):
         self._attr_current_temperature = self._attr_target_temperature
         self.async_write_ha_state()
 
+# Kettles run well above HomeKit's usual thermostat range; these are only used
+# when the target temperature helper doesn't declare its own min/max.
+KETTLE_DEFAULT_MIN_TEMP = 40
+KETTLE_DEFAULT_MAX_TEMP = 100
+
+def _as_float(value, fallback: float) -> float:
+    """Coerce a state attribute to a float, falling back when it's missing or junk."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return fallback
+
+class HomeKitKettleClimate(HomeKitDeviceEntity, ClimateEntity):
+    """Climate proxy presenting a kettle as a single HomeKit thermostat.
+
+    The HomeKit bridge allocates one accessory per entity, so exposing power,
+    current temperature and target temperature as three proxy entities gives
+    three tiles in the Home app. Folding them into one climate entity gives one
+    tile carrying all three as characteristics.
+    """
+
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _attr_target_temperature_step = 1
+    _attr_icon = "mdi:kettle"
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        power_entity: str,
+        current_temp_entity: str | None = None,
+        target_temp_entity: str | None = None,
+    ) -> None:
+        """Initialize the kettle proxy."""
+        super().__init__(hass, entry_id, "Kettle", power_entity)
+        # The kettle's primary entity, so it takes the device's name.
+        self._attr_name = None
+        self._current_temp_entity = current_temp_entity
+        self._target_temp_entity = target_temp_entity
+
+        features = ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        if target_temp_entity:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = features
+
+        self._attr_min_temp = KETTLE_DEFAULT_MIN_TEMP
+        self._attr_max_temp = KETTLE_DEFAULT_MAX_TEMP
+        self._attr_hvac_mode = HVACMode.OFF
+
+    async def async_added_to_hass(self) -> None:
+        """Track the temperature entities alongside the power entity."""
+        # Seed both before the base class writes state, so the first write is
+        # complete rather than a thermostat with no temperatures.
+        for entity_id, reader in self._extra_sources():
+            if state := self.hass.states.get(entity_id):
+                reader(state)
+
+        await super().async_added_to_hass()
+
+        for entity_id, reader in self._extra_sources():
+            self.async_on_remove(
+                async_track_state_change_event(
+                    self.hass, [entity_id], self._make_handler(reader)
+                )
+            )
+
+    def _extra_sources(self):
+        """Yield the (entity_id, reader) pairs beyond the power entity."""
+        for entity_id, reader in (
+            (self._current_temp_entity, self._read_current_temp),
+            (self._target_temp_entity, self._read_target_temp),
+        ):
+            if entity_id:
+                yield entity_id, reader
+
+    def _make_handler(self, reader):
+        """Build a state change handler that runs `reader` then writes state."""
+        async def _handle(event: Event[EventStateChangedData]) -> None:
+            new_state = event.data["new_state"]
+            if new_state is None:
+                return
+            reader(new_state)
+            self.async_write_ha_state()
+
+        return _handle
+
+    def _read_current_temp(self, state) -> None:
+        """Read the measured water temperature."""
+        if state.state in UNAVAILABLE_STATES:
+            return
+        try:
+            self._attr_current_temperature = float(state.state)
+        except (ValueError, TypeError):
+            pass
+
+    def _clamp(self, temp: float) -> float:
+        """Hold a setpoint inside the helper's own range."""
+        return min(max(temp, self._attr_min_temp), self._attr_max_temp)
+
+    def _read_target_temp(self, state) -> None:
+        """Read the setpoint and the range the helper allows."""
+        # Range first, even when the state itself is unreadable: HA's HomeKit
+        # bridge caches min/max when it builds the accessory, so a helper that
+        # is briefly unavailable at startup must not leave the slider stuck on
+        # the defaults for the rest of the session.
+        attrs = state.attributes
+        # A min of 0 is treated as "unset" by the bridge, which then substitutes
+        # its own default and produces a broken range.
+        min_temp = max(1, _as_float(attrs.get("min"), KETTLE_DEFAULT_MIN_TEMP))
+        max_temp = _as_float(attrs.get("max"), KETTLE_DEFAULT_MAX_TEMP)
+        if max_temp > min_temp:
+            self._attr_min_temp = min_temp
+            self._attr_max_temp = max_temp
+        if (step := _as_float(attrs.get("step"), 0)) > 0:
+            self._attr_target_temperature_step = step
+
+        if state.state in UNAVAILABLE_STATES:
+            return
+        try:
+            self._attr_target_temperature = self._clamp(float(state.state))
+        except (ValueError, TypeError):
+            pass
+
+    async def async_set_temperature(self, **kwargs) -> None:
+        """Push the setpoint to the target temperature helper."""
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        if temp is None or not self._target_temp_entity:
+            return
+        # input_number and number both expose set_value(value), and both reject
+        # an out-of-range value outright, so clamp rather than lose the write.
+        await self.hass.services.async_call(
+            self._target_temp_entity.split(".")[0],
+            "set_value",
+            {"entity_id": self._target_temp_entity, "value": self._clamp(temp)},
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Map Off/Heat onto the power entity."""
+        # Generic turn_on/turn_off so a switch, input_boolean or fan all work.
+        await self.hass.services.async_call(
+            "homeassistant",
+            "turn_off" if hvac_mode == HVACMode.OFF else "turn_on",
+            {"entity_id": self._source_entity},
+        )
+
+    async def async_update_from_source(self, state) -> None:
+        """Map the power entity state onto hvac mode and action."""
+        if state.state in UNAVAILABLE_STATES:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
+        heating = state.state == STATE_ON
+        self._attr_hvac_mode = HVACMode.HEAT if heating else HVACMode.OFF
+        self._attr_hvac_action = HVACAction.HEATING if heating else HVACAction.OFF
+        self.async_write_ha_state()
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -220,7 +383,19 @@ async def async_setup_entry(
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
     entities = []
 
-    if device_type == "electric_blanket":
+    if device_type == "kettle":
+        if power := config_entry.data.get(CONF_POWER_SWITCH):
+            entities.append(
+                HomeKitKettleClimate(
+                    hass,
+                    config_entry.entry_id,
+                    power,
+                    config_entry.data.get(CONF_CURRENT_TEMP),
+                    config_entry.data.get(CONF_TARGET_TEMP),
+                )
+            )
+
+    elif device_type == "electric_blanket":
         power = config_entry.data.get(CONF_POWER_SWITCH)
         zones = [z for z in (config_entry.data.get(CONF_ZONE_BODY),
                              config_entry.data.get(CONF_ZONE_FEET)) if z]

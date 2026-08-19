@@ -8,12 +8,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     DOMAIN,
     CONF_NAME,
-    CONF_KEEP_WARM,
     CONF_DIRECTION,
 )
 from .entity import HomeKitDeviceSelect
 
-KETTLE_KEEP_WARM_OPTIONS = ["Off", "On"]  # Simplified to match HomeKit characteristics
 FAN_DIRECTION_OPTIONS = ["Forward", "Reverse"]
 
 async def async_setup_entry(
@@ -27,19 +25,7 @@ async def async_setup_entry(
     entities = []
 
     # Device-specific select controls
-    if device_type == "kettle":
-        if keep_warm := config_entry.data.get(CONF_KEEP_WARM):
-            entities.append(
-                HomeKitDeviceSelect(
-                    hass,
-                    config_entry.entry_id,
-                    f"{base_name} Keep Warm",
-                    keep_warm,
-                    KETTLE_KEEP_WARM_OPTIONS
-                )
-            )
-
-    elif device_type == "fan":
+    if device_type == "fan":
         if direction := config_entry.data.get(CONF_DIRECTION):
             entities.append(
                 HomeKitDeviceSelect(

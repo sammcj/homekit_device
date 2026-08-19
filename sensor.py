@@ -39,6 +39,7 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 f"{base_name} Status",
                 status_sensor,
+                diagnostic=True,
             )
         )
 
@@ -52,6 +53,9 @@ async def async_setup_entry(
                     f"{base_name} Temperature",
                     current_temp,
                     "°C",
+                    # The thermostat already carries this reading; keeping it
+                    # diagnostic groups it in HA without a duplicate HomeKit tile.
+                    diagnostic=True,
                 )
             )
         if countdown := config_entry.data.get(CONF_COUNTDOWN):
@@ -62,6 +66,7 @@ async def async_setup_entry(
                     f"{base_name} Countdown",
                     countdown,
                     "min",
+                    diagnostic=True,
                 )
             )
         if fault := config_entry.data.get(CONF_FAULT):
@@ -71,6 +76,7 @@ async def async_setup_entry(
                     config_entry.entry_id,
                     f"{base_name} Fault",
                     fault,
+                    diagnostic=True,
                 )
             )
 

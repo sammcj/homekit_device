@@ -25,8 +25,14 @@ async def async_setup_entry(
 
     # Power entity that is itself a fan (e.g. an air purifier exposed as a
     # fan with percentage speeds). switch.py skips fan-domain entities.
+    # Kettles and electric blankets carry power on their climate entity, so
+    # they get no standalone power proxy in either domain.
     power = config_entry.data.get(CONF_POWER_SWITCH)
-    if power and power.startswith("fan."):
+    if (
+        power
+        and power.startswith("fan.")
+        and device_type not in ("electric_blanket", "kettle")
+    ):
         entities.append(
             HomeKitDeviceFan(
                 hass,

@@ -4,45 +4,19 @@ CONF_ENTITIES = "entities"
 CONF_NAME = "name"
 CONF_DEVICE_TYPE = "device_type"
 
-# HomeKit Accessory Categories
-CATEGORY_KETTLE = 27  # HomeKit category for kettles
-CATEGORY_THERMOSTAT = 9
-CATEGORY_FAN = 3
-CATEGORY_LIGHTBULB = 5
-CATEGORY_HUMIDIFIER = 29
-CATEGORY_AIR_PURIFIER = 28
-CATEGORY_GARAGE_DOOR = 4
-CATEGORY_SECURITY_SYSTEM = 7
-
-# HomeKit Features and Characteristics
-CHAR_ON = "on"
-CHAR_ACTIVE = "active"
-CHAR_CURRENT_TEMP = "current-temperature"
-CHAR_TARGET_TEMP = "target-temperature"
-CHAR_CURRENT_STATE = "current-state"
-CHAR_TARGET_STATE = "target-state"
-CHAR_FAULT = "status-fault"
-CHAR_REMAINING_TIME = "remaining-duration"
-
-# Device Features
-FEATURE_ON_OFF = "on_off"
-FEATURE_TEMPERATURE = "temperature"
-FEATURE_TIMER = "timer"
-FEATURE_STATUS = "status"
-FEATURE_KEEP_WARM = "keep_warm"
-
 # Supported HomeKit device types
 DEVICE_TYPES = {
-    "kettle": "A smart kettle with temperature control and power state",
-    "thermostat": "A thermostat with multiple temperature sensors",
-    "fan": "A fan with multiple controls (speed, oscillation, etc.)",
-    "light": "A light with multiple controls (brightness, colour, etc.)",
-    "humidifier": "A humidifier with humidity sensing and control",
-    "air_purifier": "An air purifier with air quality monitoring",
-    "garage_door": "A garage door with multiple sensors",
-    "security_system": "A security system with multiple sensors and controls",
-    "star_projector": "A star projector with master switch, rotation fan, and laser/background lights",
-    "electric_blanket": "A multi-zone electric blanket with power and per-zone heat levels"
+    "kettle": "A kettle exposed as a single thermostat (power, current and target temperature)",
+    "thermostat": "Groups temperature sensors and controls under one device",
+    "fan": "Groups fan controls (power, oscillation, direction) under one device",
+    "light": "Groups light controls under one device",
+    "humidifier": "Groups humidity sensing and control under one device",
+    "air_purifier": "Groups air purifier controls and air quality sensors under one device",
+    "garage_door": "Groups garage door sensors and light under one device",
+    "security_system": "Groups security sensors and siren under one device",
+    "star_projector": "Groups a star projector's switch, rotation fan and lights under one device",
+    "electric_blanket": "A multi-zone electric blanket with power and per-zone heat levels",
+    "shutter": "A shutter combining separate lift and tilt cover entities"
 }
 
 # Configuration keys for all device types
@@ -106,6 +80,10 @@ CONF_ZONE_BODY = "zone_body"
 CONF_ZONE_FEET = "zone_feet"
 CONF_BODY_TIMER = "body_timer"
 CONF_FEET_TIMER = "feet_timer"
+
+# Shutter related configs
+CONF_LIFT_COVER = "lift_cover"
+CONF_TILT_COVER = "tilt_cover"
 
 # Default values
 DEFAULT_NAME = "Aggregated Device"

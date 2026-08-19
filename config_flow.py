@@ -3,10 +3,10 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DOMAIN,
@@ -20,7 +20,6 @@ from .const import (
     CONF_COUNTDOWN,
     CONF_FAULT,
     CONF_KEEP_WARM,
-    CONF_KEEP_WARM_TIME,
     CONF_SPEED_CONTROL,
     CONF_OSCILLATION,
     CONF_DIRECTION,
@@ -50,6 +49,8 @@ from .const import (
     CONF_ZONE_FEET,
     CONF_BODY_TIMER,
     CONF_FEET_TIMER,
+    CONF_LIFT_COVER,
+    CONF_TILT_COVER,
     DEVICE_TYPES,
     DEFAULT_NAME,
 )
@@ -97,18 +98,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            self._data.update(user_input)
-            return self.async_create_entry(
-                title=self._data[CONF_NAME],
-                data=self._data,
-            )
+            if self._invalid_tilt_cover(user_input):
+                errors[CONF_TILT_COVER] = "tilt_same_as_lift"
+            else:
+                self._data.update(user_input)
+                return self.async_create_entry(
+                    title=self._data[CONF_NAME],
+                    data=self._data,
+                )
 
         schema = self._get_device_schema()
         return self.async_show_form(
             step_id="device_config",
-            data_schema=vol.Schema(schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(schema), user_input or {}
+            ),
             errors=errors,
         )
+
+    def _invalid_tilt_cover(self, user_input: Dict[str, Any]) -> bool:
+        """Reject one entity used for both halves unless it has its own tilt."""
+        tilt = user_input.get(CONF_TILT_COVER)
+        if not tilt or tilt != user_input.get(CONF_LIFT_COVER):
+            return False
+        state = self.hass.states.get(tilt)
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) if state else 0
+        return not features & CoverEntityFeature.SET_TILT_POSITION
 
     def _get_device_schema(self) -> dict:
         """Get the configuration schema for the selected device type."""
@@ -137,7 +152,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     selector.EntitySelectorConfig(domain="sensor")
                 ),
                 vol.Optional(CONF_KEEP_WARM): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="switch")
+                    selector.EntitySelectorConfig(domain=["switch", "input_boolean"])
                 ),
             },
             "thermostat": {
@@ -246,6 +261,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     selector.EntitySelectorConfig(domain="fan")
                 ),
             },
+            "shutter": {
+                vol.Required(CONF_LIFT_COVER): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="cover")
+                ),
+                vol.Optional(CONF_TILT_COVER): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="cover")
+                ),
+            },
             "electric_blanket": {
                 vol.Required(CONF_ZONE_BODY): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="select")
@@ -262,7 +285,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         }
 
-        schema = base_schema.copy()
+        # Shutters have no power entity - the cover entities are the whole device.
+        schema = {} if device_type == "shutter" else base_schema.copy()
         if device_type in device_schemas:
             schema.update(device_schemas[device_type])
 
