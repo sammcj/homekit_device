@@ -26,7 +26,11 @@ Verify claims about bridge behaviour against `home-assistant/core` under `homeas
 
 # Testing
 
-There is no test suite and no CI. Changes are verified with `ruff check .` and by reading HA source. Nothing runs against a live Home Assistant, so state any change as unverified until it has been smoke tested on a real instance.
+`make install` then `make check` (ruff + pytest). CI runs both on push to `main` and on PRs into `main`.
+
+Tests use `pytest-homeassistant-custom-component`, pinned in `requirements-test.txt` alongside the HA version it was verified against. The harness expects the component at `custom_components/<domain>/`, which this repo does not have, so `tests/conftest.py` builds that package in a temp dir and symlinks it back to the repo root. Do not restructure the repo to satisfy the harness - the flat layout is the install path.
+
+Tests still run against a mocked Home Assistant, not a live one. Behaviour the suite does not cover (in particular anything the HomeKit bridge does with these entities) stays unverified until it has been smoke tested on a real instance.
 
 # Releasing
 

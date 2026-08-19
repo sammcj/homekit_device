@@ -1,0 +1,5 @@
+# Pins the test harness to the Home Assistant release it was verified against.
+# pytest-homeassistant-custom-component carries its own homeassistant pin, so
+# bumping this line is how the integration moves to a newer HA.
+pytest-homeassistant-custom-component==0.13.316
+ruff==0.16.3

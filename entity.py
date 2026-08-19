@@ -31,6 +31,18 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import DOMAIN, CONF_NAME
 
+# A source in either of these states has no value worth forwarding.
+UNREADABLE_STATES = (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+
+def _numeric_or_none(value: str) -> str | None:
+    """Return the state only when HA will accept it as a number."""
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return None
+    return value
+
 class HomeKitDeviceEntity:
     """Representation of a HomeKit Device entity."""
 
@@ -199,7 +211,20 @@ class HomeKitDeviceSensor(HomeKitDeviceEntity, SensorEntity):
 
     async def async_update_from_source(self, state) -> None:
         """Update the entity from the source entity state."""
-        self._attr_native_value = state.state
+        self._attr_available = state.state != STATE_UNAVAILABLE
+        if self._attr_device_class is None:
+            # A free-text readout (status, fault) forwards its string as-is.
+            self._attr_native_value = (
+                None if state.state in UNREADABLE_STATES else state.state
+            )
+        else:
+            # HA validates the value of any sensor carrying a numeric device
+            # class, and raises inside the state write. That drops the update
+            # and leaves the proxy showing a stale reading, so anything the
+            # source publishes that isn't a number has to become None here.
+            # "unknown" is only the most common of these; an empty string or a
+            # short error string is just as routine.
+            self._attr_native_value = _numeric_or_none(state.state)
         self.async_write_ha_state()
 
 class HomeKitDeviceSelect(HomeKitDeviceEntity, SelectEntity):
@@ -296,8 +321,6 @@ LIFT_TO_TILT_FEATURE = {
     CoverEntityFeature.SET_POSITION: CoverEntityFeature.SET_TILT_POSITION,
 }
 
-UNREADABLE_STATES = (STATE_UNAVAILABLE, STATE_UNKNOWN)
-
 class HomeKitDeviceCover(HomeKitDeviceEntity, CoverEntity):
     """A cover that merges a separate lift entity and tilt entity into one."""
 
@@ -316,6 +339,11 @@ class HomeKitDeviceCover(HomeKitDeviceEntity, CoverEntity):
         self._tilt_entity = tilt_entity
         # The cover is the device's only entity, so it takes the device's name.
         self._attr_name = None
+        # CoverEntity deliberately gives _attr_is_closed no default, so the
+        # first state write raises AttributeError unless it is seeded here.
+        # HA restores integrations in an arbitrary order, so the lift source
+        # having no state yet when the proxy is added is routine, not an edge.
+        self._attr_is_closed = None
 
         # Optimistic defaults; replaced by whatever the sources actually
         # support as soon as their states can be read.
