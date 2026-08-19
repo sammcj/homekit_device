@@ -31,7 +31,9 @@ Combines the kettle's power, current temperature and target temperature into a s
 
 #### Setup Steps
 
-1. First, create the required helpers in Home Assistant:
+1. Check what your kettle already exposes before creating anything. Many Tuya and localtuya kettles provide their own `number` for the setpoint and a two-option `select` for keep warm (options like `True`/`False` or `On`/`Off`). Both are selectable directly, and the keep-warm option pair is read from the entity rather than assumed, so you only need the helpers below if your kettle has no equivalent.
+
+   To create them:
    - Go to Settings > Devices & Services > Helpers
    - Click "+ Create Helper"
    - Create an "Input Number" helper for target temperature:
@@ -70,8 +72,8 @@ Combines the kettle's power, current temperature and target temperature into a s
   - Power Switch (`switch.kettle`)
 - Optional:
   - Current Temperature (`sensor.kettle_temperature`)
-  - Target Temperature (`input_number` helper)
-  - Keep Warm Mode (`input_boolean` or `switch`)
+  - Target Temperature (the kettle's own `number`, or an `input_number` helper)
+  - Keep Warm Mode (`switch`, `input_boolean`, or a two-option `select`)
   - Countdown Timer, Fault Status, Status Sensor
 
 ### Multi-Sensor Thermostat

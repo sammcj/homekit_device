@@ -36,13 +36,27 @@ class HomeKitDeviceNumber(HomeKitDeviceEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        # input_number and number both expose set_value(value).
         await self.hass.services.async_call(
-            "input_number", "set_value",
+            self._source_entity.split(".")[0], "set_value",
             {"entity_id": self._source_entity, "value": value}
         )
 
+    def _read_bounds(self, state) -> None:
+        """Mirror the source's range rather than assuming 0-100."""
+        for attr, target in (
+            ("min", "_attr_native_min_value"),
+            ("max", "_attr_native_max_value"),
+            ("step", "_attr_native_step"),
+        ):
+            try:
+                setattr(self, target, float(state.attributes[attr]))
+            except (KeyError, TypeError, ValueError):
+                pass
+
     async def async_update_from_source(self, state) -> None:
         """Update the entity from the source entity state."""
+        self._read_bounds(state)
         try:
             self._attr_native_value = float(state.state)
             self.async_write_ha_state()
