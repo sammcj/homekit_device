@@ -8,7 +8,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    CONF_NAME,
     CONF_LIGHT_SWITCH,
     CONF_LASER_LIGHT,
     CONF_BACKGROUND_LIGHT,
@@ -89,7 +88,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomeKit Device lights."""
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
-    base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
     # Device-specific lights
@@ -99,7 +97,7 @@ async def async_setup_entry(
                 HomeKitDeviceLight(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Light",
+                    "Light",
                     light_switch,
                 )
             )
@@ -110,7 +108,7 @@ async def async_setup_entry(
                 HomeKitDeviceLight(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Laser",
+                    "Laser",
                     laser_light,
                 )
             )
@@ -119,7 +117,7 @@ async def async_setup_entry(
                 HomeKitDeviceLight(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Background",
+                    "Background",
                     background_light,
                 )
             )

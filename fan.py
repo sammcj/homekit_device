@@ -7,7 +7,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    CONF_NAME,
     CONF_POWER_SWITCH,
     CONF_ROTATION_FAN,
 )
@@ -20,7 +19,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomeKit Device fans."""
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
-    base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
     # Power entity that is itself a fan (e.g. an air purifier exposed as a
@@ -37,7 +35,7 @@ async def async_setup_entry(
             HomeKitDeviceFan(
                 hass,
                 config_entry.entry_id,
-                f"{base_name} Power",
+                "Power",
                 power,
             )
         )
@@ -48,7 +46,7 @@ async def async_setup_entry(
                 HomeKitDeviceFan(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Rotation",
+                    "Rotation",
                     rotation_fan,
                 )
             )

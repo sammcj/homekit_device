@@ -7,7 +7,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    CONF_NAME,
     CONF_CURRENT_TEMP,
     CONF_STATUS_SENSOR,
     CONF_COUNTDOWN,
@@ -28,7 +27,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomeKit Device sensors."""
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
-    base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
     # Common sensors
@@ -37,7 +35,7 @@ async def async_setup_entry(
             HomeKitDeviceSensor(
                 hass,
                 config_entry.entry_id,
-                f"{base_name} Status",
+                "Status",
                 status_sensor,
                 diagnostic=True,
             )
@@ -50,7 +48,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Temperature",
+                    "Temperature",
                     current_temp,
                     "°C",
                     # The thermostat already carries this reading; keeping it
@@ -63,7 +61,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Countdown",
+                    "Countdown",
                     countdown,
                     "min",
                     diagnostic=True,
@@ -74,7 +72,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Fault",
+                    "Fault",
                     fault,
                     diagnostic=True,
                 )
@@ -86,7 +84,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Humidity",
+                    "Humidity",
                     current_humidity,
                     "%",
                 )
@@ -96,7 +94,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Water Level",
+                    "Water Level",
                     water_level,
                     "%",
                 )
@@ -108,7 +106,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Air Quality",
+                    "Air Quality",
                     air_quality,
                 )
             )
@@ -117,7 +115,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Filter Life",
+                    "Filter Life",
                     filter_life,
                     "%",
                 )
@@ -127,7 +125,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} PM2.5",
+                    "PM2.5",
                     pm25,
                     "µg/m³",
                 )
@@ -137,7 +135,7 @@ async def async_setup_entry(
                 HomeKitDeviceSensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} VOC",
+                    "VOC",
                     voc,
                     "ppb",
                 )

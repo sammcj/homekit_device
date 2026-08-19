@@ -227,6 +227,8 @@ Keep warm remains a separate switch entity and appears as its own tile.
 
 The kettle no longer creates a separate power switch entity - power is the thermostat's Off/Heat mode. The temperature, countdown, fault and status readouts are still created and grouped under the device, but marked as diagnostic so the bridge skips them. The target temperature number is kept for use in Home Assistant; the bridge does not support the `number` domain, so it never reaches HomeKit either.
 
+**Breaking change in 3.0.0:** proxy entities no longer repeat the device name in their own name, so `switch.<name>_<name>_keep_warm` becomes `switch.<name>_keep_warm` and the HomeKit tile reads "Kettle Keep Warm" rather than "Kettle Kettle Keep Warm". Home Assistant's UI already hid the repetition, but the HomeKit Bridge and Alexa/Google use the raw name, and the entity IDs carried it. Existing entities keep their old IDs until you delete them and reload the entry.
+
 **Breaking changes** if you configured a kettle before this:
 
 - The `switch.<name>_power` proxy is gone. Point any automations at the new `climate.<name>` entity, or at your original power switch.

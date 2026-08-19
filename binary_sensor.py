@@ -8,7 +8,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    CONF_NAME,
     CONF_OBSTRUCTION,
     CONF_MOTION,
     CONF_SENSORS,
@@ -30,7 +29,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomeKit Device binary sensors."""
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
-    base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
     # Device-specific binary sensors
@@ -40,7 +38,7 @@ async def async_setup_entry(
                 HomeKitDeviceBinarySensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Obstruction",
+                    "Obstruction",
                     obstruction,
                 )
             )
@@ -49,7 +47,7 @@ async def async_setup_entry(
                 HomeKitDeviceBinarySensor(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Motion",
+                    "Motion",
                     motion,
                 )
             )
@@ -61,7 +59,7 @@ async def async_setup_entry(
                     HomeKitDeviceBinarySensor(
                         hass,
                         config_entry.entry_id,
-                        f"{base_name} Sensor {i}",
+                        "Sensor {i}",
                         sensor,
                     )
                 )

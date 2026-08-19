@@ -7,7 +7,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    CONF_NAME,
     CONF_DIRECTION,
 )
 from .entity import HomeKitDeviceSelect
@@ -21,7 +20,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomeKit Device selects."""
     device_type = hass.data[DOMAIN][config_entry.entry_id]["device_type"]
-    base_name = config_entry.data.get(CONF_NAME, "Smart Device")
     entities = []
 
     # Device-specific select controls
@@ -31,7 +29,7 @@ async def async_setup_entry(
                 HomeKitDeviceSelect(
                     hass,
                     config_entry.entry_id,
-                    f"{base_name} Direction",
+                    "Direction",
                     direction,
                     FAN_DIRECTION_OPTIONS,
                 )
