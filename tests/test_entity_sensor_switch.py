@@ -194,6 +194,9 @@ async def numeric_sensor(hass, setup_device, created_entities):
         pytest.param("", STATE_UNKNOWN, id="empty-string"),
         pytest.param("None", STATE_UNKNOWN, id="literal-none"),
         pytest.param("err", STATE_UNKNOWN, id="device-error-text"),
+        pytest.param("nan", STATE_UNKNOWN, id="nan"),
+        pytest.param("inf", STATE_UNKNOWN, id="inf"),
+        pytest.param("-inf", STATE_UNKNOWN, id="negative-inf"),
     ],
 )
 async def test_non_numeric_source_does_not_break_a_numeric_sensor(
@@ -329,3 +332,38 @@ async def test_select_backed_switch_ignores_an_unusable_option_list(
     await hass.async_block_till_done()
 
     assert [call for call in service_calls if call.service == "select_option"] == []
+
+
+@pytest.mark.parametrize(
+    "source_state",
+    [
+        pytest.param(STATE_UNKNOWN, id="unknown"),
+        pytest.param("", id="empty-string"),
+        pytest.param("err", id="device-error-text"),
+        pytest.param("nan", id="nan"),
+    ],
+)
+async def test_a_unit_alone_is_enough_to_require_a_number(
+    hass, setup_device, created_entities, source_state
+):
+    """A unit with no device class still makes HA validate the value.
+
+    HA's check is `device class or state class or unit or precision`, so the
+    countdown, humidity, water level, filter life, PM2.5 and VOC proxies are
+    all validated too even though none of them carries a device class.
+    """
+    source = "sensor.kettle_countdown"
+    hass.states.async_set(source, "5", {"unit_of_measurement": "min"})
+    entry = await setup_device(
+        "kettle",
+        "Test Kettle",
+        power_switch="switch.kettle",
+        countdown_timer=source,
+    )
+    proxy = created_entities(entry, "sensor")[0]
+    assert hass.states.get(proxy).state == "5"
+
+    hass.states.async_set(source, source_state)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(proxy).state == STATE_UNKNOWN

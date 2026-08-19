@@ -1,6 +1,8 @@
 """Platform entities for HomeKit Device Aggregator."""
 from __future__ import annotations
 
+from math import isfinite
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.select import SelectEntity
@@ -36,12 +38,16 @@ UNREADABLE_STATES = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 def _numeric_or_none(value: str) -> str | None:
-    """Return the state only when HA will accept it as a number."""
+    """Return the state only when HA will accept it as a number.
+
+    float() takes "nan" and "inf" happily, but HA rejects a non-finite value
+    just as firmly as a non-numeric one, so both have to be filtered here.
+    """
     try:
-        float(value)
+        number = float(value)
     except (TypeError, ValueError):
         return None
-    return value
+    return value if isfinite(number) else None
 
 class HomeKitDeviceEntity:
     """Representation of a HomeKit Device entity."""
@@ -209,22 +215,35 @@ class HomeKitDeviceSensor(HomeKitDeviceEntity, SensorEntity):
         if diagnostic:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @property
+    def _expects_a_number(self) -> bool:
+        """Whether HA will validate this sensor's value as numeric.
+
+        HA's own test is device class or state class or unit or display
+        precision. This class only ever sets the first two of those, and a unit
+        on its own is enough - countdown, humidity, water level, filter life,
+        PM2.5 and VOC all carry a unit and no device class.
+        """
+        return (
+            self.device_class is not None
+            or self.native_unit_of_measurement is not None
+        )
+
     async def async_update_from_source(self, state) -> None:
         """Update the entity from the source entity state."""
         self._attr_available = state.state != STATE_UNAVAILABLE
-        if self._attr_device_class is None:
-            # A free-text readout (status, fault) forwards its string as-is.
-            self._attr_native_value = (
-                None if state.state in UNREADABLE_STATES else state.state
-            )
-        else:
-            # HA validates the value of any sensor carrying a numeric device
-            # class, and raises inside the state write. That drops the update
-            # and leaves the proxy showing a stale reading, so anything the
-            # source publishes that isn't a number has to become None here.
-            # "unknown" is only the most common of these; an empty string or a
-            # short error string is just as routine.
+        if state.state in UNREADABLE_STATES:
+            self._attr_native_value = None
+        elif self._expects_a_number:
+            # HA validates such a sensor's value and raises inside the state
+            # write. That drops the update and leaves the proxy showing a stale
+            # reading, so anything HA would reject has to become None here.
+            # "unknown" is only the most common of these; an empty string, a
+            # short error string and a non-finite number are just as routine.
             self._attr_native_value = _numeric_or_none(state.state)
+        else:
+            # A free-text readout (status, fault) forwards its string as-is.
+            self._attr_native_value = state.state
         self.async_write_ha_state()
 
 class HomeKitDeviceSelect(HomeKitDeviceEntity, SelectEntity):
